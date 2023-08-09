@@ -17,11 +17,11 @@ app.get("/",(req, res)=>{
 app.get("/getUsuarios", async (req, res)=>{
     const resultado = await pool.query("select * from usuarios");
     pool.release;
-    console.log(resultado.rows);
+    //console.log(resultado.rows);
     res.json(resultado.rows);
 });
 
-app.post("/addUsuarios", async(req,res)=>{
+app.post("/addUsuario", async(req,res)=>{
     console.log(req.body);
     try{
         await pool.query("insert into usuarios (nombre, apellido, password) values ($1,$2,$3)",
@@ -30,10 +30,40 @@ app.post("/addUsuarios", async(req,res)=>{
     }catch(err){
         res.sendStatus(400);
     }
+})
+
+app.delete("/deleteUsuario/:id", async(req, res)=>{
+    console.log(req.params.id);
+    try{
+        const resultado = await pool.query("delete from usuarios where id = $1 RETURNING id",
+        [req.params.id]);
+        if(resultado.rowCount>0){
+            res.sendStatus(200);
+        }else{
+            res.sendStatus(404);
+        }
+        
+    }catch(err){
+        res.sendStatus(400);
+    }
+});
+
+app.put("/editUsuario",async(req,res)=>{
+    console.log(req.body);
+    try{
+        const resultado = await pool.query("update usuarios set nombre=$1, apellido=$2, password=$3 where id=$4",
+        [req.body.nombre, req.body.apellido, req.body.password, req.body.id]);
+        if(resultado.rowCount>0){
+            res.sendStatus(200);
+        }else{
+            res.sendStatus(404);            
+        }
+    }catch(err){
+        res.sendStatus(400);
+    }
     
 
-
-})
+});
 
 //Servicio
 app.listen(3000, ()=>console.log("servidor puerto 3000"));
